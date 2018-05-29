@@ -158,9 +158,6 @@ class AccumGradOptimizer(ProxyOptimizer):
         return slots
 
     def apply_gradients(self, grads_and_vars, global_step=None, name=None):
-        assert global_step is None, \
-            "AccumGradOptimizer doesn't support the option global_step! " \
-            "Please maintain it yourself."
         grads_and_vars = FilterNoneGrad().process(grads_and_vars)
         vs = []
         for g, v in grads_and_vars:
@@ -188,7 +185,7 @@ class AccumGradOptimizer(ProxyOptimizer):
             update_slot_op = tf.group(update_counter, *ops, name='update_slot')
 
             def update_grad():
-                update_op = self._opt.apply_gradients(slots_and_vars)
+                update_op = self._opt.apply_gradients(slots_and_vars, global_step)
                 with tf.control_dependencies([update_op]):
                     clear_ops = [tf.assign(s, tf.zeros_like(s)) for s in slots]
                 return tf.group(*clear_ops, name='update_grad')
